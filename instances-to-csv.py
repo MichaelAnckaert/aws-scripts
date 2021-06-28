@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# (c) 2021 Michael Anckaert <michael.anckaert@sinax.be>
+# https://sinax.be
 
 import argparse
 import csv
