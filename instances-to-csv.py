@@ -1,13 +1,19 @@
-import boto3
+#!/usr/bin/env python3
+
 import argparse
 import csv
 import sys
+from typing import List
+
+import boto3
 
 
 def date_output(v):
     return v.strftime("%d-%m-%Y %H:%m:%s")
 
 
+# A list of colum name, converter pairs. The column name will be extracted from the instance data and passed to the
+# converter function.
 INSTANCE_COLUMNS = [
     ("InstanceId", str),
     ("InstanceType", str),
@@ -20,7 +26,8 @@ INSTANCE_COLUMNS = [
 ]
 
 
-def get_instances(next_token=""):
+def get_instances(next_token="") -> List[str]:
+    """Get EC2 instances from the AWS API and return a list of instance information"""
     instances = []
     client = boto3.client("ec2")
     response = client.describe_instances(NextToken=next_token)
@@ -34,17 +41,35 @@ def get_instances(next_token=""):
     return instances
 
 
-def write_csv(instances):
-    with open("output.csv", "w") as f:
+def write_csv(instances: List[str], filename: str):
+    with open(filename, "w") as f:
         writer = csv.writer(f)
         writer.writerow([f[0] for f in INSTANCE_COLUMNS])
         for instance in instances:
             writer.writerow(instance)
 
 
-if __name__ == "__main__":
+def run(filename: str):
     print("Retrieving EC2 instances...")
     instances = get_instances()
-    print("Writing CSV file")
-    write_csv(instances)
+    print(f"Writing CSV file '{filename}'")
+    write_csv(instances, filename)
     print("Finished!")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Output EC2 instance information to a CSV file"
+    )
+    parser.add_argument(
+        "-f",
+        "--filename",
+        default="output.csv",
+        metavar="filename",
+        type=str,
+        help="Filename to write the output to",
+    )
+
+    args = parser.parse_args()
+
+    run(args.filename)
